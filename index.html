@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Packet Analyser - Dark Mode</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+</head>
+<body>
+  <div class="container">
+    <h1>🛰️ Packet Analyser</h1>
+
+    <div class="buttons">
+      <button onclick="startCapture()">Start</button>
+      <button onclick="stopCapture()">Stop</button>
+
+      <!-- NEW FILTER BUTTONS -->
+      <button onclick="setFilter('ALL')">All</button>
+      <button onclick="setFilter('DNS')">DNS Only</button>
+    </div>
+
+    <div class="stats">
+      <canvas id="trafficChart" width="400" height="200"></canvas>
+    </div>
+
+    <table id="packetTable">
+      <thead>
+        <tr>
+          <th>Source</th>
+          <th>Destination</th>
+          <th>Protocol</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!--  NEW DETAILS PANEL -->
+    <h3 style="color:white;">Packet Details</h3>
+    <pre id="detailsPanel" style="border:1px solid white; padding:10px; color:white; max-height:300px; overflow:auto;"></pre>
+  </div>
+is back at the bottom of your HTML (before </body>):
+
+<script>
+  let chart;
+
+  function setFilter(filter) {
+    fetch(`/set_filter/${filter}`);
+  }
+
+  function updatePackets() {
+    fetch('/packets')
+      .then(res => res.json())
+      .then(data => {
+        const table = document.querySelector('#packetTable tbody');
+        table.innerHTML = '';
+
+        data.slice().reverse().forEach(pkt => {
+          let summaryText = pkt.summary;
+
+          if (pkt.type === "DNS") {
+            summaryText += ` | 🌐 ${pkt.domain}`;
+          }
+
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td>${pkt.src}</td>
+            <td>${pkt.dst}</td>
+            <td>${pkt.proto}</td>
+            <td>${summaryText}</td>
+          `;
+
+          row.onclick = () => {
+            document.getElementById("detailsPanel").textContent = pkt.details;
+          };
+
+          table.appendChild(row);
+        });
+      });
+  }
+
+  function updateChart() {
+    fetch('/stats')
+      .then(res => res.json())
+      .then(stats => {
+        chart.data.datasets[0].data = [
+          stats.TCP,
+          stats.UDP,
+          stats.ICMP,
+          stats.Other
+        ];
+        chart.update();
+      });
+  }
+
+  function startCapture() {
+    fetch('/start');
+  }
+
+  function stopCapture() {
+    fetch('/stop');
+  }
+
+  setInterval(() => {
+    updatePackets();
+    updateChart();
+  }, 1500);
+
+  window.onload = function () {
+    const ctx = document.getElementById('trafficChart');
+    chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['TCP', 'UDP', 'ICMP', 'Other'],
+        datasets: [{
+          data: [0, 0, 0, 0],
+          backgroundColor: [
+            '#80a4aa',
+            '#d2cbe3',
+            '#efd353',
+            '#dd785b'
+          ]
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { color: '#333' } }
+        }
+      }
+    });
+  };
+</script>
+</body>
+</html>
