@@ -54,3 +54,7 @@ Then open your browser and go to:
 📁 Folder Structure
 
 packet_analyzer/ ├── packetAnalyzer.py # Flask app with Scapy integration ├── static/ │ ├── style.css # UI styling │ └── chart.js # Optional traffic visualizations ├── templates/ │ └── index.html # Main web interface └── README.md # You are here!
+
+USED:
+flask
+scapy
