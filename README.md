@@ -56,5 +56,4 @@ Then open your browser and go to:
 packet_analyzer/ ├── packetAnalyzer.py # Flask app with Scapy integration ├── static/ │ ├── style.css # UI styling │ └── chart.js # Optional traffic visualizations ├── templates/ │ └── index.html # Main web interface └── README.md # You are here!
 
 USED:
-flask
-scapy
+flask and scapy. and to edit given code was through visual studio code.
